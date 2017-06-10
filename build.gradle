@@ -37,6 +37,7 @@ dependencies {
 	compile group: 'commons-codec', name: 'commons-codec', version: "${LIB_COMMONS_CODEC}"
 	compile group: 'com.squareup.retrofit2', name: 'retrofit', version: "${LIB_RETROFIT2_VERSION}"
 	compile group: 'com.squareup.retrofit2', name: 'converter-jackson', version: "${LIB_RETROFIT2_VERSION}"
+	compile group: 'com.squareup.retrofit2', name: 'converter-scalars', version: "${LIB_RETROFIT2_VERSION}"
 	testCompile group: 'com.squareup.retrofit2', name: 'retrofit-mock', version: "${LIB_RETROFIT2_VERSION}"
 	testCompileOnly('org.projectlombok:lombok')
 

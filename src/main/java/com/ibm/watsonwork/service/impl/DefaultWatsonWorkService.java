@@ -80,7 +80,7 @@ public class DefaultWatsonWorkService implements WatsonWorkService {
     @SneakyThrows(FileNotFoundException.class)
     @PostConstruct
     public void uploadAppPhoto() {
-        File file = ResourceUtils.getFile("classpath:app-photo.jpg");
+        File file = ResourceUtils.getFile("classpath:WolframAlpha.jpg");
 
         MediaType mediaType = MediaType.parse(org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE);
         MultipartBody.Part filePart = MultipartBody.Part.createFormData(FORM_DATA_FILE, file.getName(), RequestBody.create(mediaType, file));
