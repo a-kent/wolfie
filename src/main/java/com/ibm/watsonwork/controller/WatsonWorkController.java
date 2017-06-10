@@ -1,19 +1,20 @@
 package com.ibm.watsonwork.controller;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.ibm.watsonwork.WatsonWorkConstants;
 import com.ibm.watsonwork.WatsonWorkProperties;
 import com.ibm.watsonwork.model.OauthResponse;
 import com.ibm.watsonwork.model.WebhookEvent;
 import com.ibm.watsonwork.service.AuthService;
 import com.ibm.watsonwork.service.WatsonWorkService;
+import com.ibm.watsonwork.service.WolframAlphaService;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -24,7 +25,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
-import org.springframework.util.ResourceUtils;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,7 +46,6 @@ import static com.ibm.watsonwork.WatsonWorkConstants.STATE_KEY;
 import static com.ibm.watsonwork.WatsonWorkConstants.STATE_VALUE;
 import static com.ibm.watsonwork.WatsonWorkConstants.WATSONWORK_AUTH_URI_KEY;
 import static com.ibm.watsonwork.WatsonWorkConstants.X_OUTBOUND_TOKEN;
-import static com.ibm.watsonwork.utils.MessageUtils.buildMessage;
 
 @Controller
 public class WatsonWorkController {
@@ -61,6 +60,9 @@ public class WatsonWorkController {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private WolframAlphaService wolframAlphaService;
 
     @GetMapping("/")
     public String hello(@CookieValue(value = COOKIE_ID_VALUE, required = false) String idCookie, Map<String, Object> model, HttpServletRequest request,
@@ -98,7 +100,7 @@ public class WatsonWorkController {
     }
 
     @PostMapping(value = "/webhook", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity webhookCallback(@RequestHeader(X_OUTBOUND_TOKEN) String outboundToken, @RequestBody WebhookEvent webhookEvent) {
+    public ResponseEntity webhookCallback(@RequestHeader(X_OUTBOUND_TOKEN) String outboundToken, @RequestBody WebhookEvent webhookEvent) throws UnsupportedEncodingException {
         if (VERIFICATION.equalsIgnoreCase(webhookEvent.getType()) && authService.isValidVerificationRequest(webhookEvent, outboundToken)) {
             return buildVerificationResponse(webhookEvent);
         }
@@ -106,18 +108,13 @@ public class WatsonWorkController {
         if (StringUtils.isNotEmpty(webhookEvent.getUserId()) && !StringUtils.equals(watsonWorkProperties.getAppId(), webhookEvent.getUserId())) {
             /* respond to webhook */
 
-            // send an echo message
-            watsonWorkService.createMessage(webhookEvent.getSpaceId(), buildMessage("Echo App", webhookEvent.getContent()));
+            // Call Wolfram Alpha API on explicit request
+            String webhookEventContent = webhookEvent.getContent();
+            if (webhookEventContent.trim().toLowerCase().startsWith(WatsonWorkConstants.APP_INVOCATION_TRIGGER)) {
 
-            // upload a sample file/image
-            // Remove the following block of code if you do not want to share a file on every echo message. This is just an example.
-            File file = null;
-            try {
-                file = ResourceUtils.getFile("classpath:watson-work.jpg");
-            } catch (FileNotFoundException e) {
-                LOGGER.error("File not found.", e);
+                wolframAlphaService.getShortAnswer(webhookEvent);
+
             }
-            watsonWorkService.shareFile(webhookEvent.getSpaceId(), file, "256x256");
         }
         return ResponseEntity.ok().build();
     }

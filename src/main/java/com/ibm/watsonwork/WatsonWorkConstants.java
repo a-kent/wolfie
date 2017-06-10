@@ -22,5 +22,6 @@ public class WatsonWorkConstants {
 
     public static final String HTTPS_OAUTH_CALLBACK = "https://%s/oauthCallback";
 
-
+    public static final String APP_INVOCATION_TRIGGER = "@wolfie";
+    public static final String APP_MESSAGE_TITLE = "Wolfie";
 }
