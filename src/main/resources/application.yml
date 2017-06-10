@@ -24,3 +24,9 @@ watsonwork:
         api:
             uri: ${WATSON_WORK_API_URI:https://api.watsonwork.ibm.com}
             oauth: ${WATSON_WORK_OAUTH:/oauth/authorize}
+
+wolfram-alpha:
+        app:
+            id: ${WOLFRAM_ALPHA_APP_ID:app_id_here}
+        api:
+            uri: ${WOLFRAM_ALPHA_API_URI:https://api.wolframalpha.com}
