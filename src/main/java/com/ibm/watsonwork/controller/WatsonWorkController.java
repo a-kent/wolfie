@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -105,18 +106,22 @@ public class WatsonWorkController {
             return buildVerificationResponse(webhookEvent);
         }
 
+        /* respond to webhook event and handle asynchronously */
+        processWebhookEventAsync(webhookEvent);
+        return ResponseEntity.ok().build();
+    }
+
+    @Async
+    private void processWebhookEventAsync(@RequestBody WebhookEvent webhookEvent) throws UnsupportedEncodingException {
         if (StringUtils.isNotEmpty(webhookEvent.getUserId()) && !StringUtils.equals(watsonWorkProperties.getAppId(), webhookEvent.getUserId())) {
-            /* respond to webhook */
 
             // Call Wolfram Alpha API on explicit request
             String webhookEventContent = webhookEvent.getContent();
             if (webhookEventContent.trim().toLowerCase().startsWith(WatsonWorkConstants.APP_INVOCATION_TRIGGER)) {
-
                 wolframAlphaService.getShortAnswer(webhookEvent);
 
             }
         }
-        return ResponseEntity.ok().build();
     }
 
     private ResponseEntity buildVerificationResponse(WebhookEvent webhookEvent) {
